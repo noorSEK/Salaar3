@@ -94,7 +94,7 @@ grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|
 rm /opt/urlfinder-urls.txt
 
 echo "[+] Running hakrawler ...."
-cat subdomains.txt | hakrawler -u -i -insecure >> /opt/hakrawler-urls.txt
+cat live-subdomains.txt | hakrawler -u -i -insecure >> /opt/hakrawler-urls.txt
 grep "=" /opt/hakrawler-urls.txt | qsreplace salaar >> /opt/temp-params.txt
 grep ".js" /opt/hakrawler-urls.txt >> /opt/temp-js-files.txt
 grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/hakrawler-urls.txt >> /opt/temp-secrets.txt
@@ -125,7 +125,7 @@ rm /opt/temp-wordpress.txt
 
 # JS File Analysis
 echo "[+] Running Nuclei on JS Files ...."
-cat js-files.txt | nuclei -t /root/nuclei-templates/http/exposures/ -silent -o nuclei-js-results.txt
+cat js-files.txt | nuclei -t /root/nuclei-templates/http/exposures/ -o nuclei-js-results.txt
 echo "[+] Running Mantra on JS Files ...."
 cat js-files.txt | mantra > js-mantra-results.txt
 
