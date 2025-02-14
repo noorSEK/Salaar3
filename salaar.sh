@@ -125,7 +125,7 @@ rm /opt/temp-wordpress.txt
 
 # JS File Analysis
 echo "[+] Running Nuclei on JS Files ...."
-cat js-files.txt | nuclei -t /root/nuclei-templates/http/exposures/ -o nuclei-js-results.txt
+#cat js-files.txt | nuclei -t /root/nuclei-templates/http/exposures/ -o nuclei-js-results.txt
 echo "[+] Running Mantra on JS Files ...."
 cat js-files.txt | mantra > js-mantra-results.txt
 
