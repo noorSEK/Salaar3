@@ -73,7 +73,6 @@ install_other_tools() {
 
 # Execute functions
 install_packages
-setup_python_env
 install_golang
 install_go_tools
 install_other_tools
