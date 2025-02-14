@@ -123,11 +123,6 @@ rm /opt/temp-secrets.txt
 cat /opt/temp-wordpress.txt | sort -u | tee wordpress.txt
 rm /opt/temp-wordpress.txt
 
-# JS File Analysis
-echo "[+] Running Nuclei on JS Files ...."
-#cat js-files.txt | nuclei -t /root/nuclei-templates/http/exposures/ -o nuclei-js-results.txt
-echo "[+] Running Mantra on JS Files ...."
-cat js-files.txt | mantra > js-mantra-results.txt
 
 # Parameter Fuzzing
 echo "[+] Fuzzing for XSS..."
@@ -145,6 +140,11 @@ cat params.txt | qsreplace 'https://salaar.requestcatcher.com/test' | while read
     curl --silent --path-as-is -L --insecure "$host" | grep -qs "request caught" && echo "$host"
 done | tee ssrf.txt
 
+# JS File Analysis
+echo "[+] Running Nuclei on JS Files ...."
+cat js-files.txt | nuclei -t /root/nuclei-templates/http/exposures/ -o nuclei-js-results.txt
+echo "[+] Running Mantra on JS Files ...."
+cat js-files.txt | mantra > js-mantra-results.txt
 
 # Domain Vulnerability Scanning
 echo "[+] Running Nuclei on live subdomains..."
