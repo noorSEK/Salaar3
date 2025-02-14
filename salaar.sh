@@ -57,15 +57,19 @@ echo "==================================="
 # Enumerate subdomains
 echo "[+] Enumerating subdomains..."
 subfinder -dL bug_bounty_domains.txt >> subs-temp.txt
+
 echo "[+] Enumerating subdomains using assetfinder... "
 cat bug_bounty_domains.txt | assetfinder --subs-only >> subs-temp.txt
+
 echo "[+] Enumerating subdomains using crt.sh ...."
 cat bug_bounty_domains.txt | while read -r domain; do
     curl -s "https://crt.sh/?q=%.$domain&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g'
 done | sort -u >> subs-temp.txt
+
 echo "[+] Enumerating subdomains using chaos ...."
 cat bug_bounty_domains.txt | chaos -silent -key 6aa57816-004b-429c-a02b-d1344c1abeb7 >> subs-temp.txt
 
+echo "[+] Clearing Duplicate subdomains ...."
 cat subs-temp.txt | sort -u | shuf | tee subdomains.txt
 rm subs-temp.txt
 
@@ -75,26 +79,26 @@ cat subdomains.txt | httpx -silent -o live-subdomains.txt
 # Crawl URLs and extract data
 echo "[+] Running katana ...."
 cat live-subdomains.txt | katana -d 5 -o /opt/katana-urls.txt
-grep "=" /opt/katana-urls.txt | qsreplace salaar > /opt/katana-params.txt
-grep ".js" /opt/katana-urls.txt > /opt/katana-js-files.txt
-grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/katana-urls.txt > /opt/katana-secrets.txt
-grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" /opt/katana-urls.txt > /opt/katana-wordpress.txt
+grep "=" /opt/katana-urls.txt | qsreplace salaar >> /opt/temp-params.txt
+grep ".js" /opt/katana-urls.txt >> /opt/temp-js-files.txt
+grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/katana-urls.txt >> /opt/temp-secrets.txt
+grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" /opt/katana-urls.txt >> /opt/temp-wordpress.txt
 rm /opt/katana-urls.txt
 
 echo "[+] Running urlfinder ...."
 cat subdomains.txt | urlfinder >> /opt/urlfinder-urls.txt
-cat /opt/urlfinder-urls.txt | grep = | qsreplace salaar >> /opt/urlfinder-params.txt
-cat /opt/urlfinder-urls.txt | grep .js >> /opt/urlfinder-js-files.txt
-cat /opt/urlfinder-urls.txt | grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|Bearer |eyJ|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" >> /opt/urlfinder-kong.txt
-cat /opt/urlfinder-urls.txt | grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" >> /opt/urlfinder-wordpress.txt
+grep "=" /opt/urlfinder-urls.txt | qsreplace salaar >> /opt/temp-params.txt
+grep ".js" /opt/urlfinder-urls.txt >> /opt/temp-js-files.txt
+grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/urlfinder-urls.txt >> /opt/temp-secrets.txt
+grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" /opt/urlfinder-urls.txt >> /opt/temp-wordpress.txt
 rm /opt/urlfinder-urls.txt
 
 echo "[+] Running hakrawler ...."
 cat subdomains.txt | hakrawler -u -i -insecure >> /opt/hakrawler-urls.txt
-cat /opt/hakrawler-urls.txt | grep = | qsreplace salaar >> /opt/hakrawler-params.txt
-cat /opt/hakrawler-urls.txt | grep .js >> /opt/hakrawler-js-files.txt
-cat /opt/hakrawler-urls.txt | grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|Bearer |eyJ|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" >> /opt/hakrawler-kong.txt
-cat /opt/hakrawler-urls.txt | grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" >> /opt/hakrawler-wordpress.txt
+grep "=" /opt/hakrawler-urls.txt | qsreplace salaar >> /opt/temp-params.txt
+grep ".js" /opt/hakrawler-urls.txt >> /opt/temp-js-files.txt
+grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/hakrawler-urls.txt >> /opt/temp-secrets.txt
+grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" /opt/hakrawler-urls.txt >> /opt/temp-wordpress.txt
 rm /opt/hakrawler-urls.txt
 
 echo "[+] Running waybackurls ...."
@@ -103,28 +107,26 @@ for domain in $(cat subdomains.txt); do
     sleep $((RANDOM % 5 + 3))  # Random delay (3-7 seconds)
 done
 
-cat /opt/wayback-urls.txt   | grep = | qsreplace salaar >> /opt/way-params.txt
-cat /opt/wayback-urls.txt   | grep .js >> /opt/way-js-files.txt
-cat /opt/wayback-urls.txt   | grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|Bearer |eyJ|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" >> /opt/way-kong.txt
-cat /opt/wayback-urls.txt   | grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" >> /opt/way-wordpress.txt
-rm  /opt/wayback-urls.txt
+grep "=" /opt/wayback-urls.txt   | qsreplace salaar >> /opt/temp-params.txt
+grep ".js" /opt/wayback-urls.txt   >> /opt/temp-js-files.txt
+grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/wayback-urls.txt   >> /opt/temp-secrets.txt
+grep -Ei "wp-content|wp-login|wp-admin|wp-includes|wp-json|xmlrpc.php|wordpress|wp-config|wp-cron.php" /opt/wayback-urls.txt   >> /opt/temp-wordpress.txt
+rm /opt/wayback-urls.txt  
 
 # Consolidate Data
-cat /opt/katana-params.txt /opt/urlfinder-params.txt /opt/hakrawler-params.txt /opt/way-params.txt /opt/gau-params.txt | sort -u >> params.txt
-rm /opt/katana-params.txt /opt/urlfinder-params.txt /opt/hakrawler-params.txt /opt/way-params.txt /opt/gau-params.txt
-
-cat /opt/katana-js-files.txt /opt/urlfinder-params.txt /opt/hakrawler-params.txt /opt/way-js-files.txt /opt/gau-js-files.txt | sort -u >> js-files.txt
-rm /opt/katana-js-files.txt /opt/urlfinder-params.txt /opt/hakrawler-params.txt /opt/way-js-files.txt /opt/gau-js-files.txt
-
-cat /opt/katana-kong.txt /opt/urlfinder-kong.txt /opt/hakrawler-kong.txt /opt/way-kong.txt /opt/gau-kong.txt | sort -u >> key-urls.txt
-rm /opt/katana-kong.txt /opt/urlfinder-kong.txt /opt/hakrawler-kong.txt /opt/way-kong.txt /opt/gau-kong.txt
-
-cat /opt/katana-wordpress.txt /opt/urlfinder-wordpress.txt /opt/hakrawler-wordpress.txt /opt/way-wordpress.txt /opt/gau-wordpress.txt | sort -u >> wordpress-urls.txt
-rm /opt/katana-wordpress.txt /opt/urlfinder-wordpress.txt /opt/hakrawler-wordpress.txt /opt/way-wordpress.txt /opt/gau-wordpress.txt 
-
+cat /opt/temp-params.txt | sort -u | tee params.txt
+rm /opt/temp-params.txt
+cat /opt/temp-js-files.txt | sort -u | tee js-files.txt
+rm /opt/temp-js-files.txt
+cat /opt/temp-secrets.txt | sort -u | tee secrets.txt
+rm /opt/temp-secrets.txt
+cat /opt/temp-wordpress.txt | sort -u | tee wordpress.txt
+rm /opt/temp-wordpress.txt
 
 # JS File Analysis
+echo "[+] Running Nuclei on JS Files ...."
 cat js-files.txt | nuclei -t /root/nuclei-templates/http/exposures/ -silent -o nuclei-js-results.txt
+echo "[+] Running Mantra on JS Files ...."
 cat js-files.txt | mantra > js-mantra-results.txt
 
 # Parameter Fuzzing
