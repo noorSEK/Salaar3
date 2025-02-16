@@ -158,7 +158,7 @@ cat nuclei-*.txt | sort -u > nuclei-results.txt
 rm nuclei-*.txt
 
 echo "[+] Fuzzing for SSTI..."
-cat params.txt | | grep -E "template=|preview=|id=|view=|activity=|name=|content=|redirect=" \
+cat params.txt | grep -E "template=|preview=|id=|view=|activity=|name=|content=|redirect=" \
 | shuf | qsreplace 'salaar{{7*7}}' | while read -r host; do
     curl --silent --path-as-is -L --insecure "$host" | grep -qs "salaar49" && echo "$host"
 done | tee ssti.txt
