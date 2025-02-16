@@ -78,7 +78,7 @@ cat subdomains.txt | httpx -silent -o live-subdomains.txt
 
 # Crawl URLs and extract data
 echo "[+] Running katana ...."
-cat live-subdomains.txt | katana -d 5 -o /opt/katana-urls.txt
+cat live-subdomains.txt | katana2 -o /opt/katana-urls.txt
 grep "=" /opt/katana-urls.txt | qsreplace salaar >> /opt/temp-params.txt
 grep ".js" /opt/katana-urls.txt >> /opt/temp-js-files.txt
 grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/katana-urls.txt >> /opt/temp-secrets.txt
@@ -126,7 +126,7 @@ rm /opt/temp-wordpress.txt
 
 # Parameter Fuzzing
 echo "[+] Fuzzing for XSS..."
-cat params.txt | grep -Eiv '\.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|svg|txt)($|[?&])' | shuf | qsreplace '<u>hyper</u>' | while read -r host; do
+cat params.txt | grep -Eiv '\.(jpg|jpeg|gif|css|tif|tiff|png|ttf|woff|woff2|ico|pdf|api|svg|txt)($|[?&])' | shuf | qsreplace '<u>hyper</u>' | while read -r host; do
     curl --silent --path-as-is -L --insecure "$host" | grep -qs "<u>hyper" && echo "$host"
 done | tee htmli.txt
 
