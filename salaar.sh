@@ -78,7 +78,7 @@ cat subdomains.txt | httpx -silent -o live-subdomains.txt
 
 # Crawl URLs and extract data
 echo "[+] Running katana ...."
-cat live-subdomains.txt | katana2 -o /opt/katana-urls.txt
+cat live-subdomains.txt | katana -o /opt/katana-urls.txt
 grep "=" /opt/katana-urls.txt | qsreplace salaar >> /opt/temp-params.txt
 grep ".js" /opt/katana-urls.txt >> /opt/temp-js-files.txt
 grep -Ei "token=|key=|apikey=|access_token=|secret=|auth=|password=|session=|jwt=|bearer=|Authorization=|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY" /opt/katana-urls.txt >> /opt/temp-secrets.txt
